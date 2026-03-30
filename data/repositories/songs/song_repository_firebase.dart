@@ -14,7 +14,10 @@ class SongRepositoryFirebase extends SongRepository {
   );
 
   @override
-  Future<List<Song>> fetchSongs() async {
+  Future<List<Song>> fetchSongs({bool forceFetch = false}) async {
+    if (forceFetch) {
+      _cachedSongs = null;
+    }
     if (_cachedSongs != null) {
       print("Returning Songs from Cache");
       return _cachedSongs!;

@@ -7,6 +7,7 @@ import '../../dtos/song_dto.dart';
 import 'song_repository.dart';
 
 class SongRepositoryFirebase extends SongRepository {
+  List<Song>? _cachedSongs;
   final Uri songsUri = Uri.https(
     'week-8-practice-5d28b-default-rtdb.asia-southeast1.firebasedatabase.app',
     '/projects/songs.json',
@@ -14,6 +15,10 @@ class SongRepositoryFirebase extends SongRepository {
 
   @override
   Future<List<Song>> fetchSongs() async {
+    if (_cachedSongs != null) {
+      print("Returning Songs from Cache");
+      return _cachedSongs!;
+    }
     final http.Response response = await http.get(songsUri);
 
     if (response.statusCode == 200) {
@@ -24,6 +29,7 @@ class SongRepositoryFirebase extends SongRepository {
       for (final entry in songJson.entries) {
         result.add(SongDto.fromJson(entry.key, entry.value));
       }
+      _cachedSongs = result;
       return result;
     } else {
       // 2- Throw expcetion if any issue
@@ -46,6 +52,10 @@ class SongRepositoryFirebase extends SongRepository {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to update likes for song $songId');
+    }
+    final songIndex = _cachedSongs?.indexWhere((s) => s.id == songId);
+    if (songIndex != null && songIndex != -1) {
+      _cachedSongs![songIndex].likes = newLikeCount;
     }
   }
 }
